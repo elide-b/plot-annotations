@@ -16,6 +16,13 @@ docs = [
     "sphinx~=7.0",
     "matplotlib~=3.9"
 ]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pandas",
+    "seaborn",
+    "scipy"
+]
 
 [project.urls]
 Home = "https://github.com/elide-b/starbars"

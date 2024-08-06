@@ -1,0 +1,51 @@
+name: Build and test starbars
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        matplotlib: ["matplotlib==3.9.0"]
+        seaborn: ["seaborn==0.13.0"]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+
+    - name: Install dependencies & self
+      run: |
+        # Install latest pip
+        pip install --upgrade pip
+        # Install starbars
+        pip install -e .[test]
+        # Install matplotlib
+        pip install ${{ matrix.matplotlib }}
+        # Install seaborn
+        pip install ${{ matrix.seaborn }}
+        # Fix numpy version
+        pip install numpy~=1.20
+
+    - name: Run tests & coverage
+      run: pytest --cov=starbars
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
